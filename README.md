@@ -2,6 +2,8 @@
 
 A small NestJS API that serves random quotes from Postgres. It exists to practise containerised deployments to AWS (EC2, then ECS Fargate) through GitHub Actions.
 
+Deploying to AWS is covered step by step in [docs/infra-guide.md](docs/infra-guide.md).
+
 ## Requirements
 
 - Node 24 (`nvm use` reads `.nvmrc`)
