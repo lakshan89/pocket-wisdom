@@ -5,6 +5,8 @@ import {
 import { DataSource } from 'typeorm';
 import type { TestProject } from 'vitest/node';
 import { buildDataSourceOptions } from '../../src/database/data-source-options.js';
+import { seedData } from '../../src/database/seed/seed-data.js';
+import { seed } from '../../src/database/seed/seed.js';
 
 declare module 'vitest' {
   export interface ProvidedContext {
@@ -15,8 +17,8 @@ declare module 'vitest' {
 let container: StartedPostgreSqlContainer;
 
 /**
- * Starts one throwaway Postgres for the whole e2e run and migrates it, the
- * same way the deploy pipeline migrates RDS. Needs a running Docker daemon.
+ * Starts one throwaway Postgres for the whole e2e run, then migrates and
+ * seeds it the same way the deploy pipeline prepares RDS. Needs a running Docker daemon.
  */
 export async function setup(project: TestProject) {
   container = await new PostgreSqlContainer('postgres:17-alpine').start();
@@ -27,6 +29,7 @@ export async function setup(project: TestProject) {
   );
   await dataSource.initialize();
   await dataSource.runMigrations({ transaction: 'each' });
+  await seed(dataSource, seedData);
   await dataSource.destroy();
 
   project.provide('databaseUrl', databaseUrl);
