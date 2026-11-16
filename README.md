@@ -13,6 +13,16 @@ npm ci
 npm run start:dev
 ```
 
+Copy `.env.example` to `.env` first. Every setting is an environment variable, validated at startup by [src/config/env.schema.ts](src/config/env.schema.ts).
+
+## API conventions
+
+- Routes are versioned in the URL: `/v1/...`.
+- Swagger UI is at `/docs` and the OpenAPI JSON at `/docs-json`. Set `DOCS_ENABLED=false` to turn them off.
+- Errors use [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457) problem details (`application/problem+json`). Validation failures list each bad field under `errors`.
+- Every response has an `x-request-id` header. Send your own to trace a request through the logs.
+- Each client IP gets `RATE_LIMIT_PER_MINUTE` requests per minute, then `429`.
+
 ## Scripts
 
 | Script             | What it does             |
