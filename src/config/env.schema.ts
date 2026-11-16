@@ -19,6 +19,11 @@ export const envSchema = z.object({
   // it's identical in every environment that runs the image.
   APP_VERSION: z.string().min(1).default('local'),
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
+  // postgres://user:pass@host:5432/db. For RDS, append
+  // ?sslmode=verify-full&sslrootcert=/path/to/global-bundle.pem so the
+  // connection is encrypted and the server certificate is verified.
+  DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }),
+  DATABASE_POOL_MAX: z.coerce.number().int().positive().default(10),
   LOG_LEVEL: z
     .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace'])
     .default('info'),

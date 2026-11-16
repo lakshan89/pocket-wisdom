@@ -29,11 +29,12 @@ describe('App (e2e)', () => {
     expect(res.headers['x-request-id']).toBeDefined();
   });
 
-  it('GET /health/ready returns ok', async () => {
-    await request(app.getHttpServer())
+  it('GET /health/ready reports the database as up', async () => {
+    const res = await request(app.getHttpServer())
       .get('/health/ready')
-      .expect(200)
-      .expect((res) => expect(res.body.status).toBe('ok'));
+      .expect(200);
+    expect(res.body.status).toBe('ok');
+    expect(res.body.info.database.status).toBe('up');
   });
 
   it('unknown routes return problem+json 404', async () => {

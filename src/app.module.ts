@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { envSchema, type Env } from './config/env.schema.js';
+import { DatabaseModule } from './database/database.module.js';
 import { HealthModule } from './health/health.module.js';
 import { LoggingModule } from './logging/logging.module.js';
 
@@ -14,6 +15,7 @@ import { LoggingModule } from './logging/logging.module.js';
       validationSchema: envSchema,
     }),
     LoggingModule,
+    DatabaseModule,
     HealthModule,
     // Limits are per instance (in-memory). With several Fargate tasks each
     // keeps its own count, which is fine for this project.

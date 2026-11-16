@@ -6,6 +6,10 @@ export default defineConfig({
     globals: true,
     root: './',
     include: ['**/*.e2e-spec.ts'],
+    globalSetup: ['./test/support/global-setup.ts'],
+    setupFiles: ['./test/support/setup-env.ts'],
+    // Pulling the Postgres image can take a while on the first run.
+    hookTimeout: 120_000,
     // ConfigModule reads the environment when AppModule is imported, so
     // test settings must exist before any test file loads.
     env: {

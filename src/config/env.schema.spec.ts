@@ -1,8 +1,22 @@
 import { envSchema } from './env.schema.js';
 
 describe('envSchema', () => {
-  it('applies defaults when variables are missing', () => {
-    expect(envSchema.parse({})).toEqual({
+  const required = { DATABASE_URL: 'postgres://u:p@localhost:5432/db' };
+
+  it('requires DATABASE_URL', () => {
+    expect(envSchema.safeParse({}).success).toBe(false);
+  });
+
+  it('rejects a non-postgres DATABASE_URL', () => {
+    expect(
+      envSchema.safeParse({ DATABASE_URL: 'mysql://u:p@localhost/db' }).success,
+    ).toBe(false);
+  });
+
+  it('applies defaults when optional variables are missing', () => {
+    expect(envSchema.parse(required)).toEqual({
+      ...required,
+      DATABASE_POOL_MAX: 10,
       NODE_ENV: 'development',
       APP_ENV: 'local',
       APP_VERSION: 'local',
@@ -14,11 +28,13 @@ describe('envSchema', () => {
   });
 
   it('coerces PORT from a string', () => {
-    expect(envSchema.parse({ PORT: '8080' }).PORT).toBe(8080);
+    expect(envSchema.parse({ ...required, PORT: '8080' }).PORT).toBe(8080);
   });
 
   it('parses DOCS_ENABLED=false as a boolean', () => {
-    expect(envSchema.parse({ DOCS_ENABLED: 'false' }).DOCS_ENABLED).toBe(false);
+    expect(
+      envSchema.parse({ ...required, DOCS_ENABLED: 'false' }).DOCS_ENABLED,
+    ).toBe(false);
   });
 
   it.each([
@@ -27,6 +43,8 @@ describe('envSchema', () => {
     ['APP_ENV', 'staging'],
     ['LOG_LEVEL', 'verbose'],
   ])('rejects %s=%s', (key, value) => {
-    expect(envSchema.safeParse({ [key]: value }).success).toBe(false);
+    expect(envSchema.safeParse({ ...required, [key]: value }).success).toBe(
+      false,
+    );
   });
 });
