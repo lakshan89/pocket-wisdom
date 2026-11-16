@@ -60,6 +60,12 @@ jobs:
       - name: Test
         run: npm run test:cov
 
+      # Static analysis + coverage import. Posts the quality gate on the PR.
+      - name: SonarQube scan
+        uses: SonarSource/sonarqube-scan-action@v8
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
       # Compiles src/ to dist/, the same build the Dockerfile runs.
       - name: Build
         run: npm run build
