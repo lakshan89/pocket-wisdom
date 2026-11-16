@@ -15,9 +15,9 @@ npm run start:dev
 
 ## Scripts
 
-| Script | What it does |
-|---|---|
-| `npm run build` | Compiles to `dist/` |
-| `npm run lint` | Runs ESLint |
-| `npm test` | Runs unit tests (Vitest) |
-| `npm run test:e2e` | Runs end-to-end tests |
+| Script             | What it does             |
+| ------------------ | ------------------------ |
+| `npm run build`    | Compiles to `dist/`      |
+| `npm run lint`     | Runs ESLint              |
+| `npm test`         | Runs unit tests (Vitest) |
+| `npm run test:e2e` | Runs end-to-end tests    |
