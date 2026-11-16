@@ -25,10 +25,6 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-# The release pipeline passes the git tag. /health reports it.
-ARG APP_VERSION=local
-ENV APP_VERSION=$APP_VERSION
-
 # CA bundle for verifying RDS TLS. Files ADDed from a URL default to mode 600
 # (root only), so --chmod lets the node user read it.
 ADD --chmod=644 https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem /etc/ssl/rds/global-bundle.pem
@@ -38,14 +34,22 @@ COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 COPY package.json ./
 
+# The release pipeline passes the git tag. /health reports it.
+# Declared after the COPY lines: a changed ARG invalidates every layer below
+# it, and the version changes on every release.
+ARG APP_VERSION=local
+ENV APP_VERSION=$APP_VERSION
+
 # Unprivileged user that ships with the official image (uid 1000)
 USER node
 
 EXPOSE 3000
 
-# busybox wget is in alpine. curl isn't.
+# busybox wget is in alpine. curl isn't. The shell form expands $PORT at run
+# time, so the check follows the app if PORT is overridden. ECS ignores this
+# instruction; Fargate health checks live in the task definition and the ALB.
 HEALTHCHECK --interval=30s --timeout=3s --start-period=20s --retries=3 \
-  CMD wget -qO- http://localhost:3000/health > /dev/null || exit 1
+  CMD wget -qO- "http://localhost:${PORT:-3000}/health" > /dev/null || exit 1
 
 # Run node directly, not npm, so SIGTERM reaches the app and it shuts down cleanly
 CMD ["node", "dist/main.js"]

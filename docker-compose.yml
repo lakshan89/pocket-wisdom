@@ -6,7 +6,7 @@ services:
       POSTGRES_PASSWORD: pocket
       POSTGRES_DB: pocket_wisdom
     ports:
-      - '5433:5432'
+      - '${POSTGRES_PORT:-5432}:5432'
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -17,7 +17,9 @@ services:
 
   api:
     build: .
-    env_file: .env
+    env_file:
+      - path: .env
+        required: false
     environment:
       # .env says development for `npm run start:dev`. The container has no
       # dev dependencies, so it must run as production, like every deployment.
