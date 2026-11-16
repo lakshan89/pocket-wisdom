@@ -43,6 +43,25 @@ TypeORM never alters the schema on its own (`synchronize` is off). To change it:
 
 `npm run migrate:revert` rolls back the latest migration.
 
+## Endpoints
+
+Full request and response schemas are in Swagger UI at `/docs`.
+
+| Endpoint                                          | Returns                                            |
+| ------------------------------------------------- | -------------------------------------------------- |
+| `GET /v1/quotes/random?author=&category=`         | One random quote. `404` if nothing matches         |
+| `GET /v1/quotes?author=&category=&limit=&offset=` | A page of quotes                                   |
+| `GET /v1/quotes/:id`                              | One quote                                          |
+| `GET /v1/authors?limit=&offset=`                  | A page of authors, sorted by name                  |
+| `GET /v1/authors/:slug`                           | One author                                         |
+| `GET /v1/authors/:slug/quotes?limit=&offset=`     | A page of that author's quotes                     |
+| `GET /v1/categories`                              | Every category, sorted by name                     |
+| `GET /v1/categories/:slug/quotes?limit=&offset=`  | A page of quotes in that category                  |
+| `GET /health`                                     | Liveness, with the running version and environment |
+| `GET /health/ready`                               | Readiness, including a database ping               |
+
+Lists return `{ data, meta: { total, limit, offset } }`. `limit` defaults to 20 and is capped at 50. `author` and `category` take slugs such as `seneca` or `stoicism`.
+
 ## API conventions
 
 - Routes are versioned in the URL: `/v1/...`.
@@ -53,12 +72,16 @@ TypeORM never alters the schema on its own (`synchronize` is off). To change it:
 
 ## Scripts
 
-| Script             | What it does             |
-| ------------------ | ------------------------ |
-| `npm run build`    | Compiles to `dist/`      |
-| `npm run lint`     | Runs ESLint              |
-| `npm test`         | Runs unit tests (Vitest) |
-| `npm run test:e2e` | Runs end-to-end tests    |
+| Script                             | What it does                                                                |
+| ---------------------------------- | --------------------------------------------------------------------------- |
+| `npm run start:dev`                | Runs the app with reload on change                                          |
+| `npm run build`                    | Compiles to `dist/`                                                         |
+| `npm run lint`                     | Runs ESLint                                                                 |
+| `npm run typecheck`                | Type-checks without emitting                                                |
+| `npm test`                         | Runs unit tests                                                             |
+| `npm run test:e2e`                 | Runs end-to-end tests against a throwaway Postgres container (needs Docker) |
+| `npm run test:cov`                 | Runs both and writes `coverage/lcov.info` for SonarQube (needs Docker)      |
+| `npm run migrate` / `npm run seed` | Applies migrations / loads seed quotes (after `build`)                      |
 
 ## Commits
 
