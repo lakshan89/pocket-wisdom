@@ -40,7 +40,13 @@ export class ProblemDetailsFilter implements ExceptionFilter {
         : HttpStatus.INTERNAL_SERVER_ERROR;
 
     if (status >= 500) {
-      this.logger.error(exception);
+      // For HttpExceptions also log the response body: a failed readiness
+      // check, for example, lists the failing dependency there.
+      const response =
+        exception instanceof HttpException
+          ? exception.getResponse()
+          : undefined;
+      this.logger.error({ err: exception, response }, 'Request failed');
     }
 
     const body: ProblemDetails = {

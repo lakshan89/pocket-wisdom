@@ -1,7 +1,11 @@
 import { Controller, Get, VERSION_NEUTRAL } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApiTags } from '@nestjs/swagger';
-import { HealthCheck, HealthCheckService } from '@nestjs/terminus';
+import {
+  HealthCheck,
+  HealthCheckService,
+  TypeOrmHealthIndicator,
+} from '@nestjs/terminus';
 import { SkipThrottle } from '@nestjs/throttler';
 import type { Env } from '../config/env.schema.js';
 
@@ -15,6 +19,7 @@ import type { Env } from '../config/env.schema.js';
 export class HealthController {
   constructor(
     private readonly health: HealthCheckService,
+    private readonly db: TypeOrmHealthIndicator,
     private readonly config: ConfigService<Env, true>,
   ) {}
 
@@ -33,10 +38,16 @@ export class HealthController {
     };
   }
 
-  /** Readiness: dependencies are reachable. The database check comes next. */
+  /**
+   * Readiness: dependencies are reachable. Returns 503 when the database
+   * doesn't answer within a second. Use it for deploy smoke tests, not as
+   * the ALB health check.
+   */
   @Get('ready')
   @HealthCheck()
   ready() {
-    return this.health.check([]);
+    return this.health.check([
+      () => this.db.pingCheck('database').withTimeout(1000),
+    ]);
   }
 }
