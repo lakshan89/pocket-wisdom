@@ -17,7 +17,7 @@ export interface ProblemDetails {
   detail: string;
   instance: string;
   requestId?: string;
-  errors?: { path: string; message: string }[];
+  errors?: { path?: string; message: string }[];
 }
 
 /**

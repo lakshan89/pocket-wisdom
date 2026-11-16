@@ -13,16 +13,19 @@ export function createValidationPipe(): StandardSchemaValidationPipe {
     exceptionFactory: (issues) =>
       new BadRequestException({
         message: 'Validation failed',
-        errors: issues.map((issue) => ({
-          path: (issue.path ?? [])
+        errors: issues.map((issue) => {
+          const path = (issue.path ?? [])
             .map((segment) =>
               typeof segment === 'object'
                 ? String(segment.key)
                 : String(segment),
             )
-            .join('.'),
-          message: issue.message,
-        })),
+            .join('.');
+          // A @Param schema validates a bare value, so there's no path.
+          return path
+            ? { path, message: issue.message }
+            : { message: issue.message };
+        }),
       }),
   });
 }
