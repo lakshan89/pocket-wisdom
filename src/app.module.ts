@@ -6,6 +6,7 @@ import { envSchema, type Env } from './config/env.schema.js';
 import { DatabaseModule } from './database/database.module.js';
 import { HealthModule } from './health/health.module.js';
 import { LoggingModule } from './logging/logging.module.js';
+import { QuotesModule } from './quotes/quotes.module.js';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { LoggingModule } from './logging/logging.module.js';
     LoggingModule,
     DatabaseModule,
     HealthModule,
+    QuotesModule,
     // Limits are per instance (in-memory). With several Fargate tasks each
     // keeps its own count, which is fine for this project.
     ThrottlerModule.forRootAsync({
