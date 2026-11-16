@@ -1,0 +1,8 @@
+# Actions are pinned to commit SHAs. Dependabot opens weekly PRs that bump
+# the SHA and its version comment together.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
