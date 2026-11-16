@@ -31,13 +31,17 @@ export function resolveRequestId(
       inject: [ConfigService],
       useFactory: (config: ConfigService<Env, true>) => {
         const appEnv = config.get('APP_ENV', { infer: true });
-        const isLocal = appEnv === 'local';
+        // pino-pretty is a devDependency, so it only exists outside the
+        // production image. Key on NODE_ENV, not APP_ENV: a container run
+        // locally still has APP_ENV=local but no dev dependencies.
+        const pretty =
+          config.get('NODE_ENV', { infer: true }) === 'development';
         return {
           pinoHttp: {
             level: config.get('LOG_LEVEL', { infer: true }),
-            // JSON to stdout everywhere except local, where it's prettified.
+            // JSON to stdout everywhere except `npm run start:dev`.
             // Docker/ECS ship stdout to CloudWatch.
-            transport: isLocal
+            transport: pretty
               ? { target: 'pino-pretty', options: { singleLine: true } }
               : undefined,
             base: { env: appEnv },

@@ -1,0 +1,34 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: pocket
+      POSTGRES_PASSWORD: pocket
+      POSTGRES_DB: pocket_wisdom
+    ports:
+      - '5433:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U pocket -d pocket_wisdom']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: .
+    env_file: .env
+    environment:
+      # .env says development for `npm run start:dev`. The container has no
+      # dev dependencies, so it must run as production, like every deployment.
+      NODE_ENV: production
+      # Inside the compose network the database host is the service name, not localhost
+      DATABASE_URL: postgres://pocket:pocket@db:5432/pocket_wisdom
+    ports:
+      - '3000:3000'
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
