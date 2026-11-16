@@ -2,9 +2,8 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
-import { AppController } from './app.controller.js';
-import { AppService } from './app.service.js';
 import { envSchema, type Env } from './config/env.schema.js';
+import { HealthModule } from './health/health.module.js';
 import { LoggingModule } from './logging/logging.module.js';
 
 @Module({
@@ -15,6 +14,7 @@ import { LoggingModule } from './logging/logging.module.js';
       validationSchema: envSchema,
     }),
     LoggingModule,
+    HealthModule,
     // Limits are per instance (in-memory). With several Fargate tasks each
     // keeps its own count, which is fine for this project.
     ThrottlerModule.forRootAsync({
@@ -27,7 +27,6 @@ import { LoggingModule } from './logging/logging.module.js';
       ],
     }),
   ],
-  controllers: [AppController],
-  providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}
