@@ -7,15 +7,32 @@ Deploying to AWS is covered step by step in [docs/infra-guide.md](docs/infra-gui
 ## Requirements
 
 - Node 24 (`nvm use` reads `.nvmrc`)
+- Docker, for the local database and the e2e tests
 
 ## Run locally
 
 ```bash
+cp .env.example .env
+docker compose up -d db       # Postgres 17 on localhost:5432
 npm ci
+npm run build && npm run migrate && npm run seed
 npm run start:dev
 ```
 
-Copy `.env.example` to `.env` first. Every setting is an environment variable, validated at startup by [src/config/env.schema.ts](src/config/env.schema.ts).
+Every setting is an environment variable, validated at startup by [src/config/env.schema.ts](src/config/env.schema.ts).
+
+If something else already uses port 5432, set `POSTGRES_PORT=5433` in `.env` and change the port in `DATABASE_URL` to match. Compose reads `.env` when it substitutes `${POSTGRES_PORT}`.
+
+### Run the whole stack in Docker
+
+```bash
+docker compose up -d --build
+docker compose exec api node dist/database/migrate.js
+docker compose exec api node dist/database/seed.js
+curl localhost:3000/v1/quotes/random
+```
+
+The `api` container runs the production image with `NODE_ENV=production` and reaches the database at host `db`. Stop it (`docker compose stop api`) before running `npm run start:dev`, because both use port 3000. `docker compose down` keeps the data. `docker compose down -v` deletes it.
 
 ## Database
 
