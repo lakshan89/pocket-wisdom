@@ -22,7 +22,11 @@
     "lint:fix": "eslint . --fix",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
-    "prepare": "husky"
+    "prepare": "husky",
+    "typeorm": "node --env-file-if-exists=.env node_modules/typeorm/cli.js -d dist/database/data-source.cli.js",
+    "migration:generate": "npm run build && npm run typeorm -- migration:generate",
+    "migrate": "node --env-file-if-exists=.env dist/database/migrate.js",
+    "migrate:revert": "npm run typeorm -- migration:revert"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.1",
