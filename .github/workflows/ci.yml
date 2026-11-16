@@ -1,0 +1,77 @@
+name: Pocket Wisdom - Node CI
+
+# Run on every PR that targets main, and again on each push to it.
+on:
+  pull_request:
+    branches: ['main']
+
+# The job only reads the repo, so the GITHUB_TOKEN can't push or change anything.
+permissions:
+  contents: read
+
+# A new push to the same PR cancels the run still in progress for the old commit.
+concurrency:
+  group: ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  # The job name is the status check name that the main ruleset requires.
+  checks:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Full history, not just the last commit: commitlint reads every commit in the PR.
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      # Node version comes from .nvmrc, the same file nvm uses locally.
+      # cache: npm reuses downloaded packages between runs, keyed on package-lock.json.
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: 'npm'
+
+      # Exact versions from package-lock.json. Fails if the lockfile is out of date.
+      - name: Install
+        run: npm ci
+
+      # Every commit message in the PR must follow Conventional Commits.
+      # The release workflow reads them to pick the next version.
+      - name: Commitlint
+        run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+
+      # ESLint with type-aware rules.
+      - name: Lint
+        run: npm run lint
+
+      # Fails if any file isn't formatted by Prettier. Fix with `npm run format`.
+      - name: Format
+        run: npm run format:check
+
+      # TypeScript compile check with no output, tests included.
+      - name: Typecheck
+        run: npm run typecheck
+
+      # Unit and e2e tests. The e2e tests start Postgres in Docker through Testcontainers.
+      # Writes coverage/lcov.info for SonarQube.
+      - name: Test
+        run: npm run test:cov
+
+      # Compiles src/ to dist/, the same build the Dockerfile runs.
+      - name: Build
+        run: npm run build
+
+      # Catches a broken Dockerfile before merge. The image isn't pushed anywhere.
+      - name: Docker build
+        run: docker build .
+
+      # Saves the coverage report on the run page, even when tests fail.
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/lcov.info
