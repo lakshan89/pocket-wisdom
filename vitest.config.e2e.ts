@@ -17,6 +17,8 @@ export default defineConfig({
       APP_ENV: 'dev',
       APP_VERSION: 'v9.9.9',
       LOG_LEVEL: 'fatal',
+      // Suites make hundreds of requests from one IP.
+      RATE_LIMIT_PER_MINUTE: '10000',
     },
   },
 });
