@@ -1,0 +1,459 @@
+{
+  "info": {
+    "name": "Pocket Wisdom API",
+    "description": "Endpoints of the Pocket Wisdom API. Set baseUrl for the target environment. Versioned routes live under /v1; /health is unversioned.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    },
+    {
+      "key": "quoteId",
+      "value": ""
+    },
+    {
+      "key": "authorSlug",
+      "value": "seneca"
+    },
+    {
+      "key": "categorySlug",
+      "value": "stoicism"
+    },
+    {
+      "key": "email",
+      "value": "me@example.com"
+    },
+    {
+      "key": "password",
+      "value": "correct horse battery"
+    },
+    {
+      "key": "refreshToken",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "health",
+      "item": [
+        {
+          "name": "Liveness",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "Process is up. Returns status, version, and env."
+          }
+        },
+        {
+          "name": "Readiness",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health/ready",
+              "host": ["{{baseUrl}}"],
+              "path": ["health", "ready"]
+            },
+            "description": "Pings the database. Returns 503 if it does not answer within 1 second."
+          }
+        }
+      ]
+    },
+    {
+      "name": "quotes",
+      "item": [
+        {
+          "name": "Random quote",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/quotes/random?author={{authorSlug}}&category={{categorySlug}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "quotes", "random"],
+              "query": [
+                {
+                  "key": "author",
+                  "value": "{{authorSlug}}",
+                  "description": "Author slug",
+                  "disabled": true
+                },
+                {
+                  "key": "category",
+                  "value": "{{categorySlug}}",
+                  "description": "Category slug",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "A random quote, optionally filtered. Saves the id to {{quoteId}}."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "const id = body.id ?? body.data?.[0]?.id;",
+                  "if (id) pm.collectionVariables.set(\"quoteId\", id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List quotes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/quotes?limit=20&offset=0&author={{authorSlug}}&category={{categorySlug}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "quotes"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "1 to 50, default 20",
+                  "disabled": false
+                },
+                {
+                  "key": "offset",
+                  "value": "0",
+                  "description": "0 to 10000, default 0",
+                  "disabled": false
+                },
+                {
+                  "key": "author",
+                  "value": "{{authorSlug}}",
+                  "description": "Author slug",
+                  "disabled": true
+                },
+                {
+                  "key": "category",
+                  "value": "{{categorySlug}}",
+                  "description": "Category slug",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Paginated quotes, optionally filtered. Saves the first id to {{quoteId}}."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "const id = body.id ?? body.data?.[0]?.id;",
+                  "if (id) pm.collectionVariables.set(\"quoteId\", id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Quote by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/quotes/{{quoteId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "quotes", "{{quoteId}}"]
+            },
+            "description": "One quote by UUID. Run Random quote first to fill {{quoteId}}."
+          }
+        }
+      ]
+    },
+    {
+      "name": "authors",
+      "item": [
+        {
+          "name": "List authors",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/authors?limit=20&offset=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "authors"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "1 to 50, default 20",
+                  "disabled": false
+                },
+                {
+                  "key": "offset",
+                  "value": "0",
+                  "description": "0 to 10000, default 0",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "Paginated authors, sorted by name."
+          }
+        },
+        {
+          "name": "Author by slug",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/authors/{{authorSlug}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "authors", "{{authorSlug}}"]
+            },
+            "description": "One author."
+          }
+        },
+        {
+          "name": "Quotes by author",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/authors/{{authorSlug}}/quotes?limit=20&offset=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "authors", "{{authorSlug}}", "quotes"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "1 to 50, default 20",
+                  "disabled": false
+                },
+                {
+                  "key": "offset",
+                  "value": "0",
+                  "description": "0 to 10000, default 0",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "Paginated quotes by one author. 404 if the author does not exist."
+          }
+        }
+      ]
+    },
+    {
+      "name": "categories",
+      "item": [
+        {
+          "name": "List categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "categories"]
+            },
+            "description": "All categories, sorted by name."
+          }
+        },
+        {
+          "name": "Quotes in category",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/categories/{{categorySlug}}/quotes?limit=20&offset=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "categories", "{{categorySlug}}", "quotes"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "1 to 50, default 20",
+                  "disabled": false
+                },
+                {
+                  "key": "offset",
+                  "value": "0",
+                  "description": "0 to 10000, default 0",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "Paginated quotes in one category. 404 if the category does not exist."
+          }
+        }
+      ]
+    },
+    {
+      "name": "auth",
+      "item": [
+        {
+          "name": "Sign up",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/auth/sign-up",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "auth", "sign-up"]
+            },
+            "description": "Creates an account. 201 with { id, email }; 409 if the email exists; 400 if the password is under 8 characters. 5 requests a minute per IP.",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Sign in (get tokens)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/auth/token",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "auth", "token"]
+            },
+            "description": "Exchanges email and password for an access token (15 min) and a refresh token. Saves both into collection variables. 5 requests a minute per IP.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const { accessToken, refreshToken } = pm.response.json();",
+                  "  pm.collectionVariables.set('accessToken', accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh tokens",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/auth/token/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "auth", "token", "refresh"]
+            },
+            "description": "Exchanges the refresh token for a new pair and saves it. Each refresh token works once: reusing one revokes every token of that sign-in.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const { accessToken, refreshToken } = pm.response.json();",
+                  "  pm.collectionVariables.set('accessToken', accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Sign out (revoke)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/auth/token/revoke",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "auth", "token", "revoke"]
+            },
+            "description": "Revokes the refresh token and its family. Always 204. Access tokens already issued stay valid until they expire.",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "auth", "me"]
+            },
+            "description": "The signed-in user. Uses the collection bearer auth ({{accessToken}})."
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -31,6 +31,9 @@ export const envSchema = z.object({
   DOCS_ENABLED: z.stringbool().default(true),
   // Requests allowed per client IP per minute.
   RATE_LIMIT_PER_MINUTE: z.coerce.number().int().positive().default(100),
+  // HS256 key that signs access tokens. 32 random bytes as base64 is 44
+  // characters, so anything shorter is too weak to accept.
+  JWT_SECRET: z.string().min(32),
 });
 
 export type Env = z.infer<typeof envSchema>;

@@ -1,3 +1,4 @@
+import { Public } from '@nestjs/authentication';
 import { Controller, Get, VERSION_NEUTRAL } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApiTags } from '@nestjs/swagger';
@@ -13,6 +14,7 @@ import type { Env } from '../config/env.schema.js';
  * /health is unversioned so load balancer settings never change between
  * API versions, and never rate limited so health checks can't get a 429.
  */
+@Public() // load balancer and ECS health checks don't send a token
 @ApiTags('health')
 @SkipThrottle()
 @Controller({ path: 'health', version: VERSION_NEUTRAL })
