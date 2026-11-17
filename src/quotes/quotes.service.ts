@@ -1,10 +1,27 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository, type SelectQueryBuilder } from 'typeorm';
+import {
+  In,
+  Repository,
+  type EntityManager,
+  type EntityTarget,
+  type FindOptionsWhere,
+  type SelectQueryBuilder,
+} from 'typeorm';
 import type { Page, Pagination } from '../common/pagination.js';
+import { Author } from './entities/author.entity.js';
+import { Category } from './entities/category.entity.js';
 import { Quote } from './entities/quote.entity.js';
 import {
+  AUTHOR_SLUG_MAX,
+  CATEGORY_SLUG_MAX,
   toQuoteDto,
+  toSlug,
+  type CreateQuoteBody,
   type QuoteDto,
   type QuoteFilters,
 } from './quotes.schemas.js';
@@ -48,6 +65,48 @@ export class QuotesService {
     }
     const [quote] = await this.loadInOrder([row.id]);
     return quote;
+  }
+
+  /**
+   * Adds a quote in one transaction. The author and category are matched by
+   * the slug of their name and created when missing; an existing one keeps
+   * its name. Throws 409 if the author already has this exact text, and
+   * then nothing is written, not even a new author or category.
+   */
+  async create(body: CreateQuoteBody): Promise<QuoteDto> {
+    const id = await this.quotes.manager.transaction(async (em) => {
+      const author = await findOrCreateBySlug(em, Author, {
+        slug: toSlug(body.author, AUTHOR_SLUG_MAX),
+        name: body.author,
+      });
+      const category = await findOrCreateBySlug(em, Category, {
+        slug: toSlug(body.category, CATEGORY_SLUG_MAX),
+        name: body.category,
+      });
+
+      // ON CONFLICT DO NOTHING on (author_id, text) returns no row for a
+      // duplicate. Two concurrent requests can't both insert it.
+      const inserted = await em
+        .createQueryBuilder()
+        .insert()
+        .into(Quote)
+        .values({ authorId: author.id, text: body.text })
+        .orIgnore()
+        .returning('id')
+        .execute();
+      const row = (inserted.raw as { id: string }[])[0];
+      if (!row) {
+        throw new ConflictException(`${author.name} already has this quote`);
+      }
+
+      await em
+        .createQueryBuilder()
+        .relation(Quote, 'categories')
+        .of(row.id)
+        .add(category.id);
+      return row.id;
+    });
+    return this.findOne(id);
   }
 
   async findOne(id: string): Promise<QuoteDto> {
@@ -97,4 +156,25 @@ export class QuotesService {
     const byId = new Map(quotes.map((q) => [q.id, q]));
     return ids.map((id) => toQuoteDto(byId.get(id)!));
   }
+}
+
+/**
+ * Returns the row with this slug, inserting it first if there is none.
+ * ON CONFLICT DO NOTHING makes a concurrent insert of the same slug safe.
+ */
+async function findOrCreateBySlug<T extends Author | Category>(
+  em: EntityManager,
+  entity: EntityTarget<T>,
+  values: Pick<T, 'slug' | 'name'>,
+): Promise<T> {
+  await em
+    .createQueryBuilder(entity, 'e')
+    .insert()
+    // TypeORM can't resolve its partial-entity type for a generic T.
+    .values(values as never)
+    .orIgnore()
+    .execute();
+  return em
+    .getRepository(entity)
+    .findOneByOrFail({ slug: values.slug } as FindOptionsWhere<T>);
 }
