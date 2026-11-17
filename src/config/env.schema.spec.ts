@@ -1,7 +1,10 @@
 import { envSchema } from './env.schema.js';
 
 describe('envSchema', () => {
-  const required = { DATABASE_URL: 'postgres://u:p@localhost:5432/db' };
+  const required = {
+    DATABASE_URL: 'postgres://u:p@localhost:5432/db',
+    JWT_SECRET: 'x'.repeat(32),
+  };
 
   it('requires DATABASE_URL', () => {
     expect(envSchema.safeParse({}).success).toBe(false);
@@ -42,6 +45,7 @@ describe('envSchema', () => {
     ['PORT', '70000'],
     ['APP_ENV', 'staging'],
     ['LOG_LEVEL', 'verbose'],
+    ['JWT_SECRET', 'too-short'],
   ])('rejects %s=%s', (key, value) => {
     expect(envSchema.safeParse({ ...required, [key]: value }).success).toBe(
       false,

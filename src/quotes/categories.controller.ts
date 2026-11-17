@@ -5,7 +5,7 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
-import { Public } from '../common/decorators/public.decorator.js';
+import { Public } from '@nestjs/authentication';
 import { toOpenApi } from '../common/openapi.js';
 import {
   paginationQuerySchema,
