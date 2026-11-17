@@ -31,6 +31,9 @@ export default defineConfig({
           include: ['test/**/*.e2e-spec.ts'],
           globalSetup: ['./test/support/global-setup.ts'],
           setupFiles: ['./test/support/setup-env.ts'],
+          // Files share one database, and some count rows that others
+          // write (quotes-create) or rename (seed). One file at a time.
+          fileParallelism: false,
           // Pulling the Postgres image can take a while on the first run.
           hookTimeout: 120_000,
           // ConfigModule reads the environment when AppModule is imported,

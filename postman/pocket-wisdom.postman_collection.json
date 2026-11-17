@@ -187,6 +187,28 @@
             },
             "description": "One quote by UUID. Run Random quote first to fill {{quoteId}}."
           }
+        },
+        {
+          "name": "Create quote",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Luck is what happens when preparation meets opportunity.\",\n  \"author\": \"Seneca\",\n  \"category\": \"Stoicism\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/quotes",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "quotes"]
+            },
+            "description": "Adds a quote. Needs a bearer token (collection auth, {{accessToken}}). The author and category are matched by the slug of their name and created if missing. 201 with the quote; 409 if the author already has this text; 400 for a blank or missing field."
+          }
         }
       ]
     },
